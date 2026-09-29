@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudentHousing Hub | Final Proje</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --primary-color: #003580; --secondary-color: #febb02; --sidebar-width: 260px; }
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', system-ui, sans-serif; overflow-x: hidden; }
+        
+        .sidebar { width: var(--sidebar-width); height: 100vh; background: #ffffff; position: fixed; top: 0; left: 0; border-right: 1px solid #e5e7eb; padding: 2rem 1rem; display: flex; flex-direction: column; z-index: 1000; }
+        .main-content { margin-left: var(--sidebar-width); padding: 2rem; min-height: 100vh; }
+        
+        .nav-link-custom { padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 0.5rem; color: #4b5563; cursor: pointer; transition: all 0.2s; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+        .nav-link-custom:hover { background-color: #f3f4f6; color: var(--primary-color); }
+        .nav-link-custom.active { background-color: #eef2ff; color: var(--primary-color); font-weight: 700; }
+        
+        .card-custom { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: none; padding: 1.5rem; transition: transform 0.2s; }
+        .listing-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        .amenity-badge { font-size: 0.75rem; background-color: #f0f2f5; color: #444; padding: 4px 8px; border-radius: 6px; margin-right: 4px; margin-bottom: 4px; display: inline-block; font-weight: 600; border: 1px solid #e1e4e8; }
+        .amenity-badge i { color: var(--primary-color); margin-right: 3px; }
+        
+        .contact-box { background-color: #d1e7dd; border: 1px solid #badbcc; color: #0f5132; padding: 10px; border-radius: 8px; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+        .category-title { font-size: 0.85rem; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; margin-top: 10px; }
+        
+        #login-section { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100vh; 
+            background-color: #f3f4f6; 
+            z-index: 9999; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        
+        .cursor-pointer { cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="login-section">
+        <div class="card-custom shadow-lg text-center" style="width: 400px; padding: 2.5rem;">
+            <h3 class="fw-bold mt-2" style="color: var(--primary-color);"><i class="fa-solid fa-house-laptop"></i> StudentHousing</h3>
+            <div class="d-flex justify-content-center gap-3 my-3">
+                <button onclick="toggleAuth('login')" id="tab-login" class="btn btn-sm btn-primary">Giriş Yap</button>
+                <button onclick="toggleAuth('register')" id="tab-register" class="btn btn-sm btn-outline-primary">Kayıt Ol</button>
+            </div>
+            <div id="form-login">
+                <div class="form-floating mb-3"><input type="text" class="form-control" id="username" placeholder="Kullanıcı Adı"><label>Kullanıcı Adı</label></div>
+                <div class="form-floating mb-4"><input type="password" class="form-control" id="password" placeholder="Şifre"><label>Şifre</label></div>
+                <button onclick="login()" class="btn btn-primary w-100 py-3 fw-bold rounded-3" style="background-color: var(--primary-color);">Giriş Yap</button>
+            </div>
+            <div id="form-register" style="display: none;">
+                <input type="text" class="form-control mb-2" id="r-username" placeholder="Kullanıcı Adı Belirle">
+                <input type="password" class="form-control mb-2" id="r-password" placeholder="Şifre Belirle">
+                <input type="text" class="form-control mb-2" id="r-contact" placeholder="Telefon (Zorunlu)">
+                <select id="r-role" class="form-select mb-3"><option value="STUDENT">Öğrenci</option><option value="LANDLORD">Ev Sahibi</option></select>
+                <button onclick="register()" class="btn btn-success w-100 py-3 fw-bold rounded-3">Kayıt Ol</button>
+            </div>
+            <div id="login-error" class="text-danger mt-3 small fw-bold"></div>
+        </div>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+        <div class="sidebar">
+            <h4 class="fw-bold px-2 mb-4" style="color: var(--primary-color);"><i class="fa-solid fa-city"></i> Hub Panel</h4>
+            
+            <div id="menu-student" style="display: none;">
+                <div onclick="showTab('search')" class="nav-link-custom active" id="btn-search"><i class="fa-solid fa-magnifying-glass"></i> İlan Ara</div>
+                <div onclick="showTab('applications')" class="nav-link-custom" id="btn-apps"><i class="fa-solid fa-file-signature"></i> Başvurularım</div>
+				<div onclick="showTab('favorites')" class="nav-link-custom" id="btn-favs"><i class="fa-solid fa-heart"></i> Favorilerim</div>
+                <div onclick="showTab('profile')" class="nav-link-custom" id="btn-profile"><i class="fa-solid fa-user"></i> Profil Bilgisi</div>
+            </div>
+
+            <div id="menu-landlord" style="display: none;">
+                <div onclick="showTab('incoming-apps')" class="nav-link-custom" id="btn-incoming"><i class="fa-solid fa-envelope-open-text"></i> Gelen Başvurular</div>
+                <div onclick="showTab('my-listings')" class="nav-link-custom" id="btn-mylistings"><i class="fa-solid fa-list-check"></i> İlanlarım / Yönetim</div>
+                <div onclick="showTab('add-listing')" class="nav-link-custom" id="btn-add"><i class="fa-solid fa-circle-plus"></i> Yeni İlan Ekle</div>
+                <div onclick="showTab('market')" class="nav-link-custom" id="btn-market"><i class="fa-solid fa-chart-line"></i> Tüm Piyasa</div>
+                <div onclick="showTab('profile')" class="nav-link-custom" id="btn-profile-l"><i class="fa-solid fa-user-tie"></i> Profil Bilgisi</div>
+            </div>
+
+            <button onclick="logout()" class="btn btn-outline-danger w-100 mt-auto btn-sm"><i class="fa-solid fa-right-from-bracket"></i> Çıkış Yap</button>
+        </div>
+
+        <div class="main-content">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <h2 class="fw-bold text-dark mb-0" id="page-title">Hoş Geldiniz</h2>
+                <div class="bg-white px-4 py-2 rounded-pill shadow-sm"><span class="fw-bold small text-success">● Sistem Online</span></div>
+            </div>
+
+            <div id="tab-search" class="content-section" style="display: none;">
+                <div class="card-custom mb-4">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-2"><label class="small fw-bold text-muted">Şehir</label><input type="text" id="sCity" class="form-control" placeholder="Örn: Izmir"></div>
+                        <div class="col-md-2"><label class="small fw-bold text-muted">Max Bütçe</label><input type="number" id="sPrice" class="form-control" placeholder="10000"></div>
+                        <div class="col-md-2"><label class="small fw-bold text-muted">Konut Tipi</label>
+                            <select id="sRoom" class="form-select">
+                                <option value="">Tümü</option><option value="1+1">1+1 Daire</option><option value="2+1">2+1 Daire</option><option value="3+1">3+1 Daire</option>
+                                <option value="1+0 Stüdyo">1+0 Stüdyo</option><option value="Tek Kişilik Oda">Tek Kişilik Oda</option><option value="Paylaşımlı Oda">Paylaşımlı Oda</option><option value="Yurt Odası">Yurt Odası</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2"><label class="small fw-bold text-muted">Özellikler</label>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary w-100 text-start text-truncate dropdown-toggle bg-white" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Özellik Seç</button>
+                                <ul class="dropdown-menu p-2 shadow" style="min-width: 250px; max-height: 300px; overflow-y: auto;">
+                                    <li><h6 class="dropdown-header text-primary">Teknoloji & Faturalar</h6></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Fiber İnternet"> Fiber İnternet</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="WiFi"> WiFi</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Faturalar Dahil"> Faturalar Dahil</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Doğalgaz"> Doğalgaz</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Klima"> Klima</label></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header text-primary">Eşya & Konfor</h6></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Full Eşyalı"> Full Eşyalı</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Bulaşık Makinesi"> Bulaşık Makinesi</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Çamaşır Makinesi"> Çamaşır Makinesi</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="TV"> Televizyon</label></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header text-primary">Bina & Konum</h6></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Güvenlik"> Güvenlik</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Otopark"> Otopark</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Balkon"> Balkon</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Metroya Yakın"> Metroya Yakın</label></li>
+                                    <li><label class="dropdown-item"><input class="form-check-input search-amenity me-2" type="checkbox" value="Kampüse Yakın"> Kampüse Yakın</label></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-2"><label class="small fw-bold text-primary">Sıralama</label><select id="sSort" class="form-select" onchange="performSearch()"><option value="newest">En Yeni</option><option value="asc">Fiyat (Artan)</option><option value="desc">Fiyat (Azalan)</option></select></div>
+                        <div class="col-md-2"><button onclick="performSearch()" class="btn btn-primary w-100 fw-bold" style="background-color: var(--primary-color);">Ara</button></div>
+                    </div>
+                </div>
+                <div id="listingResults" class="row g-4"></div>
+            </div>
+
+            <div id="tab-applications" class="content-section" style="display: none;"><div id="applications-list" class="row g-4"></div></div>
+			<div id="tab-favorites" class="content-section" style="display: none;">
+			    <h4 class="fw-bold mb-4 text-danger"><i class="fa-solid fa-heart"></i> Favori İlanlarım</h4>
+			    <div id="favorites-list" class="row g-4"></div>
+			</div>
+            <div id="tab-incoming-apps" class="content-section" style="display: none;">
+                <h5 class="fw-bold text-warning mb-3"><i class="fa-solid fa-hourglass-half"></i> Bekleyen İşlemler</h5>
+                <div id="pending-list" class="row g-4 mb-5"></div>
+                <hr class="my-4">
+                <h5 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişi</h5>
+                <div id="history-list" class="row g-4"></div>
+            </div>
+
+            <div id="tab-my-listings" class="content-section" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="alert alert-light border mb-0 py-2 px-3"><i class="fa-solid fa-circle-info"></i> İlanlarınızı yönetin.</div>
+                    <select id="mySort" class="form-select w-auto" onchange="loadMyLandlordListings()"><option value="newest">Sırala: En Yeni</option><option value="asc">Fiyat: Düşükten Yükseğe</option><option value="desc">Fiyat: Yüksekten Düşüğe</option></select>
+                </div>
+                <div id="my-listings-container" class="row g-4"></div>
+            </div>
+
+            <div id="tab-add-listing" class="content-section" style="display: none;">
+                <div class="card-custom mx-auto" style="max-width: 800px;">
+                    <h4 class="fw-bold mb-4" id="form-title">Yeni İlan Oluştur</h4>
+                    <div class="row g-3 mb-4">
+						<div class="col-md-12"><label class="fw-bold small">İlan Fotoğrafları (En fazla 5 adet)</label><input type="file" id="lImage" class="form-control" accept="image/*" multiple><small class="text-muted">Birden fazla fotoğraf seçebilirsiniz (Max 1MB/resim)</small></div>
+                        <div class="col-md-12"><label class="fw-bold small">İlan Başlığı</label><input type="text" id="lTitle" class="form-control" placeholder="Örn: Metroya 5dk Mesafede Full Eşyalı Daire"></div>
+                        <div class="col-md-6"><label class="fw-bold small">Şehir</label><input type="text" id="lCity" class="form-control" placeholder="Izmir"></div>
+                        <div class="col-md-3"><label class="fw-bold small">Fiyat (TL)</label><input type="number" id="lPrice" class="form-control" placeholder="10000"></div>
+                        <div class="col-md-3"><label class="fw-bold small">Konut Tipi</label>
+                            <select id="lRoom" class="form-select">
+                                <option value="1+1">1+1 Daire</option><option value="2+1">2+1 Daire</option><option value="3+1">3+1 Daire</option>
+                                <option value="1+0 Stüdyo">1+0 Stüdyo</option><option value="Tek Kişilik Oda">Tek Kişilik Oda</option><option value="Paylaşımlı Oda">Paylaşımlı Oda</option><option value="Yurt Odası">Yurt Odası</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="fw-bold small mb-2 d-block">İlan Özellikleri</label>
+                        <div class="p-4 border rounded bg-light">
+                            <div class="category-title"><i class="fa-solid fa-wifi"></i> Teknoloji & Faturalar</div>
+                            <div class="d-flex flex-wrap gap-3 mb-3">
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Fiber İnternet"><label class="form-check-label">Fiber İnternet</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="WiFi"><label class="form-check-label">WiFi</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Faturalar Dahil"><label class="form-check-label">Faturalar Dahil</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Klima"><label class="form-check-label">Klima</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Doğalgaz"><label class="form-check-label">Doğalgaz (Kombi)</label></div>
+                            </div>
+                            <hr>
+                            <div class="category-title"><i class="fa-solid fa-couch"></i> Eşya & Konfor</div>
+                            <div class="d-flex flex-wrap gap-3 mb-3">
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Full Eşyalı"><label class="form-check-label">Full Eşyalı</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Bulaşık Makinesi"><label class="form-check-label">Bulaşık Makinesi</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Çamaşır Makinesi"><label class="form-check-label">Çamaşır Makinesi</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="TV"><label class="form-check-label">Televizyon</label></div>
+                            </div>
+                            <hr>
+                            <div class="category-title"><i class="fa-solid fa-building"></i> Bina & Olanaklar</div>
+                            <div class="d-flex flex-wrap gap-3 mb-3">
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Güvenlik"><label class="form-check-label">7/24 Güvenlik</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Otopark"><label class="form-check-label">Otopark</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Balkon"><label class="form-check-label">Balkon</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Asansör"><label class="form-check-label">Asansör</label></div>
+                            </div>
+                            <hr>
+                            <div class="category-title"><i class="fa-solid fa-map-location-dot"></i> Konum & Diğer</div>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Metroya Yakın"><label class="form-check-label">Metroya Yakın</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Kampüse Yakın"><label class="form-check-label">Kampüse Yakın</label></div>
+                                <div class="form-check"><input class="form-check-input amenity-check" type="checkbox" value="Evcil Hayvan"><label class="form-check-label">Evcil Hayvan Dostu 🐾</label></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="saveListing()" class="btn btn-success w-100 py-2 fw-bold" id="btn-save-listing">İlanı Yayınla</button>
+                    <button onclick="cancelEdit()" class="btn btn-secondary w-100 py-2 fw-bold mt-2" id="btn-cancel-edit" style="display: none;">İptal</button>
+                </div>
+            </div>
+
+            <div id="tab-market" class="content-section" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="alert alert-info border mb-0 py-2 px-3">Tüm piyasayı inceliyorsunuz.</div>
+                    <select id="marketSort" class="form-select w-auto" onchange="loadMarketListings()"><option value="newest">Sırala: En Yeni</option><option value="asc">Fiyat: Düşükten Yükseğe</option><option value="desc">Fiyat: Yüksekten Düşüğe</option></select>
+                </div>
+                <div id="market-list" class="row g-4"></div>
+            </div>
+
+            <div id="tab-profile" class="content-section" style="display: none;">
+                <div class="card-custom" id="profile-card"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="listingDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-primary" id="modalTitle">İlan Detayı</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="listingCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner" id="modalCarouselInner" style="height: 400px; background-color: #f8f9fa;">
+                            </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#listingCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#listingCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+                        </button>
+                    </div>
+
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="fw-bold text-success mb-0" id="modalPrice">Fiyat</h3>
+                            <span class="badge bg-secondary fs-5" id="modalRoomType">Tip</span>
+                        </div>
+                        <div class="mb-3 text-muted" id="modalLandlordInfo"></div>
+                        <div class="mb-3"><i class="fa-solid fa-location-dot text-danger"></i> <span id="modalCity" class="fw-bold">Şehir</span></div>
+                        
+                        <hr>
+                        <h6 class="fw-bold">Özellikler</h6>
+                        <div id="modalAmenities" class="d-flex flex-wrap gap-2 mb-4"></div>
+                        
+                        <div id="modalActionArea"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Profilim</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profileForm">
+                        <div class="mb-3">
+                            <label class="form-label">Telefon Numarası (Zorunlu)</label>
+                            <input type="text" class="form-control" id="profileContact" required>
+                        </div>
+
+                        <div id="studentFields" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Okul Adı</label>
+                                <input type="text" class="form-control" id="profileSchool">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Bölüm</label>
+                                <input type="text" class="form-control" id="profileDept">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Öğrenci Numarası</label>
+                                <input type="text" class="form-control" id="profileNo">
+                            </div>
+                        </div>
+
+                        <div id="landlordFields" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">T.C. / Vergi No</label>
+                                <input type="text" class="form-control" id="profileTax" placeholder="Vergi No giriniz">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProfile()">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let currentUser = null;
+        let editingListingId = null;
+		let myFavoriteIds = [];
+		
+        // --- AUTH (KAYIT & GİRİŞ) ---
+        function toggleAuth(type) {
+            document.getElementById('login-error').innerText = "";
+            if (type === 'login') {
+                document.getElementById('form-login').style.display = 'block';
+                document.getElementById('form-register').style.display = 'none';
+                document.getElementById('tab-login').className = 'btn btn-sm btn-primary';
+                document.getElementById('tab-register').className = 'btn btn-sm btn-outline-primary';
+            } else {
+                document.getElementById('form-login').style.display = 'none';
+                document.getElementById('form-register').style.display = 'block';
+                document.getElementById('tab-login').className = 'btn btn-sm btn-outline-primary';
+                document.getElementById('tab-register').className = 'btn btn-sm btn-success';
+            }
+        }
+
+        async function register() {
+            const u = document.getElementById('r-username').value;
+            const p = document.getElementById('r-password').value;
+            const c = document.getElementById('r-contact').value;
+            const r = document.getElementById('r-role').value;
+
+            if (!u || !p || !c) {
+                document.getElementById('login-error').innerText = "Kullanıcı adı, şifre ve telefon zorunludur!";
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:8080/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p, contactInfo: c, role: r })
+                });
+
+                if (res.ok) {
+                    alert("Kayıt Başarılı! Şimdi giriş yapabilirsiniz.");
+                    toggleAuth('login');
+                } else {
+                    document.getElementById('login-error').innerText = await res.text();
+                }
+            } catch (e) {
+                document.getElementById('login-error').innerText = "Bağlantı hatası!";
+            }
+        }
+
+        async function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.innerText = "";
+
+            if(!u || !p) {
+                errorDiv.innerText = "Lütfen alanları doldurun.";
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:8080/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username: u, password: p })
+                });
+
+                if (res.ok) {
+                    currentUser = await res.json();
+					await loadFavoriteIds();
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    
+                    if (currentUser.role === 'LANDLORD') {
+                        document.getElementById('menu-landlord').style.display = 'block';
+                        showTab('incoming-apps'); 
+                    } else {
+                        document.getElementById('menu-student').style.display = 'block';
+                        showTab('search');
+                        performSearch();
+                    }
+                } else {
+                    errorDiv.innerText = "Giriş Başarısız! Bilgileri kontrol edin.";
+                }
+            } catch (e) {
+                errorDiv.innerText = "Sunucu bağlantı hatası!";
+            }
+        }
+
+        // --- NAVIGASYON ---
+        function showTab(tabName) {
+            document.querySelectorAll('.content-section').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.nav-link-custom').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).style.display = 'block';
+            
+            const btnMap = { 
+                'search': 'btn-search', 'applications': 'btn-apps', 'add-listing': 'btn-add', 
+                'profile': 'btn-profile', 'incoming-apps': 'btn-incoming', 'market': 'btn-market', 
+                'my-listings': 'btn-mylistings',
+				'favorites': 'btn-favs'
+            };
+            
+            if(btnMap[tabName] && document.getElementById(btnMap[tabName])) {
+                document.getElementById(btnMap[tabName]).classList.add('active');
+            }
+
+            if (tabName === 'add-listing' && editingListingId === null) {
+                cancelEdit();
+            }
+
+            if(tabName === 'applications') loadMyApplications();
+            if(tabName === 'incoming-apps') loadIncomingApplications();
+            if(tabName === 'profile') loadProfile();
+            if(tabName === 'market') loadMarketListings();
+            if(tabName === 'my-listings') loadMyLandlordListings();
+			if(tabName === 'favorites') loadFavoritesPage();
+        }
+
+        // --- İLAN EKLEME VE DÜZENLEME ---
+        function startEdit(itemStr) {
+            const item = JSON.parse(decodeURIComponent(itemStr));
+            editingListingId = item.listingId;
+
+            document.getElementById('lTitle').value = item.title;
+            document.getElementById('lCity').value = item.city;
+            document.getElementById('lPrice').value = item.rentAmount;
+            document.getElementById('lRoom').value = item.roomType;
+
+            document.querySelectorAll('.amenity-check').forEach(c => c.checked = false);
+            if (item.amenities) {
+                const ams = item.amenities.split(', ');
+                document.querySelectorAll('.amenity-check').forEach(c => {
+                    if (ams.includes(c.value)) c.checked = true;
+                });
+            }
+
+            document.getElementById('form-title').innerText = "İlanı Düzenle";
+            document.getElementById('btn-save-listing').innerText = "Değişiklikleri Kaydet";
+            document.getElementById('btn-save-listing').classList.remove('btn-success');
+            document.getElementById('btn-save-listing').classList.add('btn-warning');
+            document.getElementById('btn-cancel-edit').style.display = 'block';
+
+            showTab('add-listing');
+        }
+
+        function cancelEdit() {
+            editingListingId = null;
+            document.getElementById('lTitle').value = "";
+            document.getElementById('lCity').value = "";
+            document.getElementById('lPrice').value = "";
+            document.querySelectorAll('.amenity-check').forEach(c => c.checked = false);
+            document.getElementById('lImage').value = ""; // Resim inputunu da temizle
+            document.getElementById('form-title').innerText = "Yeni İlan Oluştur";
+            document.getElementById('btn-save-listing').innerText = "İlanı Yayınla";
+            document.getElementById('btn-save-listing').classList.add('btn-success');
+            document.getElementById('btn-save-listing').classList.remove('btn-warning');
+            document.getElementById('btn-cancel-edit').style.display = 'none';
+        }
+
+        async function saveListing() {
+            const titleVal = document.getElementById('lTitle').value.trim();
+            const cityVal = document.getElementById('lCity').value.trim();
+            const priceVal = document.getElementById('lPrice').value;
+            const roomVal = document.getElementById('lRoom').value;
+            const fileInput = document.getElementById('lImage'); 
+
+            if (!titleVal || !cityVal || !priceVal) {
+                alert("⚠️ Lütfen İlan Başlığı, Şehir ve Fiyat alanlarını doldurun.");
+                return;
+            }
+
+            let imageList = [];
+            if (fileInput.files.length > 0) {
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    if (file.size > 1048576) { 
+                        alert(`"${file.name}" çok büyük! Lütfen 1MB'dan küçük resimler seçin.`);
+                        return;
+                    }
+                    const base64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(file);
+                    });
+                    imageList.push(base64);
+                }
+            }
+            
+            let selectedAmenities = [];
+            document.querySelectorAll('.amenity-check:checked').forEach(c => selectedAmenities.push(c.value));
+            
+            const listing = {
+                title: titleVal,
+                city: cityVal,
+                rentAmount: parseFloat(priceVal),
+                roomType: roomVal,
+                landlordId: currentUser.id,
+                amenities: selectedAmenities.join(', '),
+                images: imageList 
+            };
+
+            let url = 'http://localhost:8080/api/listings';
+            let method = 'POST';
+
+            if (editingListingId !== null) {
+                url = `http://localhost:8080/api/listings/${editingListingId}`;
+                method = 'PUT';
+            }
+
+            try {
+                const res = await fetch(url, {
+                    method: method, 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(listing)
+                });
+
+                if (res.ok) {
+                    alert(editingListingId ? "İlan Güncellendi!" : "İlan Yayınlandı!");
+                    document.getElementById('lImage').value = ""; 
+                    cancelEdit(); 
+                    showTab('my-listings');
+                } else {
+                    alert("Hata: " + await res.text());
+                }
+            } catch (e) {
+                alert("Sunucu hatası!");
+            }
+        }
+        
+        // SIRALAMA VE ARAMA 
+        function sortData(data, sortId) {
+            const sortType = document.getElementById(sortId).value;
+            if(sortType === 'asc') return data.sort((a,b) => a.rentAmount - b.rentAmount);
+            if(sortType === 'desc') return data.sort((a,b) => b.rentAmount - a.rentAmount);
+            return data.sort((a,b) => b.listingId - a.listingId);
+        }
+
+        async function performSearch() {
+            const city = document.getElementById('sCity').value;
+            const price = document.getElementById('sPrice').value;
+            const room = document.getElementById('sRoom').value;
+            
+            let selectedAmenities = [];
+            document.querySelectorAll('.search-amenity:checked').forEach(c => selectedAmenities.push(c.value));
+            const amenitiesStr = selectedAmenities.join(',');
+
+			// encodeURIComponent fonksiyonu, +, boşluk gibi özel karakterleri şifreler
+			const res = await fetch(`http://localhost:8080/api/search?city=${encodeURIComponent(city)}&maxPrice=${price}&roomType=${encodeURIComponent(room)}&amenities=${encodeURIComponent(amenitiesStr)}`);
+            let data = await res.json();
+            data = sortData(data, 'sSort');
+
+            let html = '';
+            (Array.isArray(data) ? data : []).forEach(item => html += createListingCardHTML(item, 'student'));
+            
+            if(html === '') {
+                document.getElementById('listingResults').innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-face-frown fa-2x mb-3"></i><p>Aradığınız kriterlere uygun ilan bulunamadı.</p></div>';
+            } else {
+                document.getElementById('listingResults').innerHTML = html;
+            }
+        }
+
+        async function filterByLandlord(landlordId, landlordName) {
+            document.getElementById('sCity').value = '';
+            document.getElementById('sPrice').value = '';
+            document.getElementById('sRoom').value = '';
+            
+            const resultsDiv = document.getElementById('listingResults');
+            resultsDiv.innerHTML = `<div class="col-12 text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-primary fw-bold">${landlordName} kullanıcısının ilanları getiriliyor...</p></div>`;
+
+            const res = await fetch(`http://localhost:8080/api/search?landlordId=${landlordId}`);
+            let data = await res.json();
+            
+            let html = `
+                <div class="col-12 mb-2">
+                    <div class="alert alert-primary d-flex justify-content-between align-items-center">
+                        <span><strong>${landlordName}</strong> adlı ev sahibinin ilanlarını görüntülüyorsunuz.</span>
+                        <button onclick="performSearch()" class="btn btn-sm btn-light fw-bold">Tüm İlanlara Dön</button>
+                    </div>
+                </div>`;
+                
+            if (data.length === 0) {
+                html += '<div class="col-12 text-center text-muted">Başka ilan bulunamadı.</div>';
+            } else {
+                data.forEach(item => html += createListingCardHTML(item, 'student'));
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        async function loadMyLandlordListings() {
+            const res = await fetch(`http://localhost:8080/api/listings/landlord/${currentUser.id}`);
+            let data = await res.json();
+            data = sortData(data, 'mySort');
+
+            let html = '';
+            (Array.isArray(data) ? data : []).forEach(item => html += createListingCardHTML(item, 'manage'));
+            document.getElementById('my-listings-container').innerHTML = html || '<div class="col-12 text-center">İlan yok.</div>';
+        }
+
+        async function loadMarketListings() {
+            const res = await fetch('http://localhost:8080/api/search');
+            let data = await res.json();
+            data = sortData(data, 'marketSort');
+
+            let html = '';
+            (Array.isArray(data) ? data : []).forEach(item => html += createListingCardHTML(item, 'market'));
+            document.getElementById('market-list').innerHTML = html;
+        }
+
+		function createListingCardHTML(item, type) {
+		    let coverImage = (item.images && item.images.length > 0) ? item.images[0] : '';
+		    
+		    let heartBtn = ''; 
+		    if (type === 'student') {
+		        let isFav = myFavoriteIds.includes(item.listingId);
+		        let heartIconClass = isFav ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart text-danger';
+		        
+		        heartBtn = `
+		        <div onclick="toggleFavorite(${item.listingId}, this); event.stopPropagation();" 
+		             class="position-absolute top-0 end-0 m-3 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center fav-btn-${item.listingId}" 
+		             style="width: 40px; height: 40px; cursor: pointer; z-index: 10;">
+		            <i class="${heartIconClass} fa-lg"></i>
+		        </div>`;
+		    }
+
+		    let imageHTML = coverImage ? 
+		        `<div class="position-relative">
+		            ${heartBtn}
+		            <img src="${coverImage}" class="card-img-top" style="height: 200px; object-fit: cover; cursor: pointer; border-top-left-radius: 12px; border-top-right-radius: 12px;" onclick='openDetailModal(${JSON.stringify(item)}, "${type}")'>
+		         </div>` : 
+		        `<div class="position-relative bg-light d-flex align-items-center justify-content-center" style="height: 200px; cursor: pointer; border-top-left-radius: 12px; border-top-right-radius: 12px; color:#ccc;" onclick='openDetailModal(${JSON.stringify(item)}, "${type}")'>
+		            ${heartBtn}
+		            <i class="fa-solid fa-house-chimney fa-3x"></i>
+		         </div>`;
+
+		    let amenitiesHTML = '';
+		    if(item.amenities) {
+		        const list = item.amenities.split(',').slice(0, 3);
+		        list.forEach(tag => {
+		            let icon = '<i class="fa-solid fa-check"></i>';
+		            if(tag.includes('WiFi') || tag.includes('Fiber')) icon = '<i class="fa-solid fa-wifi"></i>';
+		            else if(tag.includes('Klima')) icon = '<i class="fa-regular fa-snowflake"></i>';
+		            else if(tag.includes('Güvenlik')) icon = '<i class="fa-solid fa-shield-halved"></i>';
+		            else if(tag.includes('Metro')) icon = '<i class="fa-solid fa-train-subway"></i>';
+		            else if(tag.includes('Eşya')) icon = '<i class="fa-solid fa-couch"></i>';
+		            else if(tag.includes('TV')) icon = '<i class="fa-solid fa-tv"></i>';
+		            else if(tag.includes('Otopark')) icon = '<i class="fa-solid fa-car"></i>';
+		            else if(tag.includes('Asansör')) icon = '<i class="fa-solid fa-elevator"></i>';
+		            else if(tag.includes('Balkon')) icon = '<i class="fa-solid fa-wind"></i>';
+		            else if(tag.includes('Fatura')) icon = '<i class="fa-solid fa-file-invoice-dollar"></i>';
+		            else if(tag.includes('Evcil')) icon = '<i class="fa-solid fa-paw"></i>';
+
+		            amenitiesHTML += `<span class="amenity-badge">${icon} ${tag.trim()}</span>`;
+		        });
+		        if(item.amenities.split(',').length > 3) amenitiesHTML += `<span class="badge bg-light text-muted border small ms-1">+Daha fazla</span>`;
+		    }
+
+		    let buttonHTML = '';
+		    if(type === 'student') {
+		        buttonHTML = `<button onclick='openDetailModal(${JSON.stringify(item)}, "student")' class="btn btn-outline-primary w-100 btn-sm fw-bold">Detayları Gör</button>`;
+		    } else if(type === 'manage') {
+		        buttonHTML = `<div class="d-flex gap-2"><button onclick='openDetailModal(${JSON.stringify(item)}, "manage")' class="btn btn-primary w-100 btn-sm">İncele</button></div>`;
+		    } else {
+		        buttonHTML = `<button class="btn btn-light w-100 btn-sm text-muted" disabled>İnceleme Modu</button>`;
+		    }
+
+		    let landlordHTML = '';
+		    if (type === 'student') {
+		        landlordHTML = `
+		        <div class="mb-2 pb-2 border-bottom cursor-pointer" onclick="filterByLandlord(${item.landlordId}, '${item.landlordName || 'Ev Sahibi'}')">
+		            <small class="text-primary fw-bold">
+		                <i class="fa-solid fa-user-tie"></i> İlan Sahibi: ${item.landlordName || 'Ev Sahibi'}
+		            </small>
+		        </div>`;
+		    }
+
+		    return `
+		    <div class="col-md-6 col-lg-4">
+		        <div class="card-custom h-100 listing-card d-flex flex-column p-0 border-0 shadow-sm"> 
+		            ${imageHTML} 
+		            <div class="p-3 d-flex flex-column h-100"> 
+		                <div class="d-flex justify-content-between align-items-start mb-2">
+		                    <h5 class="fw-bold text-dark mb-0 text-truncate" style="max-width: 70%;" title="${item.title}">${item.title}</h5>
+		                    <span class="badge bg-success fs-6">${item.rentAmount} TL</span>
+		                </div>
+		                ${landlordHTML}
+		                <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot"></i> ${item.city} | 🏠 ${item.roomType}</p>
+		                <div class="mb-3">${amenitiesHTML}</div>
+		                <div class="mt-auto">${buttonHTML}</div>
+		            </div>
+		        </div>
+		    </div>`;
+		}
+		
+        //  PROFİL YÖNETİMİ 
+		function loadProfile() {
+		            if (!currentUser) {
+		                document.getElementById('profile-card').innerHTML = '<p class="text-danger">Kullanıcı verisi bulunamadı.</p>';
+		                return;
+		            }
+
+		            let roleDisplay = currentUser.role === 'LANDLORD' ? 'Ev Sahibi' : 'Öğrenci';
+		            let iconDisplay = currentUser.role === 'LANDLORD' ? '<i class="fa-solid fa-user-tie fa-3x text-primary"></i>' : '<i class="fa-solid fa-user-graduate fa-3x text-warning"></i>';
+
+		            // Rolüne göre ekstra bilgileri hazırla (Okul, Vergi No vs.)
+		            let extraInfoHTML = '';
+		            if (currentUser.role === 'STUDENT') {
+		                extraInfoHTML = `
+		                    <hr class="my-2">
+		                    <div class="mb-2"><i class="fa-solid fa-university me-2 text-muted"></i> <strong>Okul:</strong> ${currentUser.schoolName || '<span class="text-muted fst-italic">Girilmedi</span>'}</div>
+		                    <div class="mb-2"><i class="fa-solid fa-graduation-cap me-2 text-muted"></i> <strong>Bölüm:</strong> ${currentUser.department || '<span class="text-muted fst-italic">Girilmedi</span>'}</div>
+		                    <div class="mb-2"><i class="fa-solid fa-id-card me-2 text-muted"></i> <strong>Öğrenci No:</strong> ${currentUser.studentNumber || '<span class="text-muted fst-italic">Girilmedi</span>'}</div>
+		                `;
+		            } else {
+		                extraInfoHTML = `
+		                    <hr class="my-2">
+		                    <div class="mb-2"><i class="fa-solid fa-file-invoice me-2 text-muted"></i> <strong>Vergi No:</strong> ${currentUser.taxNumber || '<span class="text-muted fst-italic">Girilmedi</span>'}</div>
+		                `;
+		            }
+
+		            let html = `
+		                <div class="row align-items-center">
+		                    <div class="col-md-2 text-center mb-3 mb-md-0">
+		                        ${iconDisplay}
+		                    </div>
+		                    <div class="col-md-10">
+		                        <div class="d-flex justify-content-between align-items-start">
+		                            <div>
+		                                <h4 class="fw-bold mb-1">${currentUser.username}</h4>
+		                                <span class="badge bg-secondary mb-3">${roleDisplay}</span>
+		                            </div>
+		                            <div class="d-flex gap-2">
+		                                <button onclick="openProfileModal()" class="btn btn-primary btn-sm fw-bold">
+		                                    <i class="fa-solid fa-pen-to-square"></i> Düzenle
+		                                </button>
+		                                <button onclick="deleteAccount()" class="btn btn-outline-danger btn-sm fw-bold">
+		                                    <i class="fa-solid fa-user-slash"></i> Sil
+		                                </button>
+		                            </div>
+		                        </div>
+		                        
+		                        <div class="p-3 bg-light rounded border mt-2">
+		                            <div class="mb-2">
+		                                <i class="fa-solid fa-phone me-2 text-muted"></i>
+		                                <strong>İletişim:</strong> ${currentUser.contactInfo || 'Belirtilmemiş'}
+		                            </div>
+		                            <div class="mb-2">
+		                                <i class="fa-solid fa-id-badge me-2 text-muted"></i>
+		                                <strong>Kullanıcı ID:</strong> ${currentUser.id}
+		                            </div>
+		                            
+		                            ${extraInfoHTML}
+		                        </div>
+		                         <div class="mt-2 text-muted small fst-italic">
+		                            <i class="fa-solid fa-circle-info"></i> Bilgilerinizi güncellemek için "Düzenle" butonunu kullanabilirsiniz.
+		                        </div>
+		                    </div>
+		                </div>
+		            `;
+		            document.getElementById('profile-card').innerHTML = html;
+		        }
+
+		async function deleteAccount() {
+		    if (!currentUser) return;
+
+		    if (!confirm("Hesabınızı ve tüm verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) {
+		        return;
+		    }
+
+		    let endpoint = "";
+		    if (currentUser.role === 'STUDENT') {
+		        endpoint = `http://localhost:8080/api/students/${currentUser.id}`;
+		    } else {
+		        endpoint = `http://localhost:8080/api/landlords/${currentUser.id}`;
+		    }
+
+		    try {
+		        const res = await fetch(endpoint, {
+		            method: 'DELETE'
+		        });
+
+		        if (res.ok) {
+		            alert("Hesabınız başarıyla silindi.");
+		            logout(); 
+		        } else {
+		            const msg = await res.text();
+		            alert("Silme başarısız: " + msg);
+		        }
+		    } catch (e) {
+		        console.error(e);
+		        alert("Sunucuyla iletişim kurulamadı.");
+		    }
+		}
+
+        async function loadIncomingApplications() {
+            const res = await fetch(`http://localhost:8080/api/landlord/applications/${currentUser.id}`);
+            const apps = await res.json();
+            let pendingHTML = '', historyHTML = '';
+            
+            apps.forEach(app => {
+                let contactHTML = app.status === 'Onaylandı' ? `<div class="contact-box"><i class="fa-brands fa-whatsapp"></i> Öğrenci Tel: ${app.student.contactInfo || 'Yok'}</div>` : '';
+                
+                const cardHTML = `
+                <div class="col-md-6">
+                    <div class="card-custom h-100 border ${app.status === 'Beklemede' ? 'border-warning' : ''}">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="text-muted small text-truncate" style="max-width: 60%;">İlan: ${app.listing.title}</h6>
+                            <span class="badge ${getStatusBadge(app.status)}">${app.status}</span>
+                        </div>
+                        <h5 class="fw-bold mt-2"><i class="fa-solid fa-user-graduate"></i> ${app.student.username}</h5>
+                        ${contactHTML}
+                        <div class="mt-3 d-flex gap-2">
+                            ${app.status === 'Beklemede' ? 
+                            `<button onclick="updateStatus(${app.id}, 'Onaylandı')" class="btn btn-success btn-sm flex-grow-1">Onayla ✅</button>
+                             <button onclick="updateStatus(${app.id}, 'Reddedildi')" class="btn btn-outline-danger btn-sm flex-grow-1">Reddet ❌</button>` 
+                            : `<small class="text-muted w-100 text-center">İşlem: ${app.status}</small>`}
+                        </div>
+                    </div>
+                </div>`;
+
+                if(app.status === 'Beklemede' ? pendingHTML += cardHTML : historyHTML += cardHTML);
+            });
+
+            document.getElementById('pending-list').innerHTML = pendingHTML || '<div class="col-12 text-center text-muted">Bekleyen yok.</div>';
+            document.getElementById('history-list').innerHTML = historyHTML || '<div class="col-12 text-center text-muted">Geçmiş yok.</div>';
+        }
+        
+        async function loadMyApplications() {
+             const res = await fetch(`http://localhost:8080/api/applications/${currentUser.id}`);
+             const apps = await res.json();
+             let html = '';
+             
+             apps.forEach(app => {
+                 let contactHTML = app.status === 'Onaylandı' ? `<div class="contact-box"><i class="fa-solid fa-check"></i> Onaylandı! Ev sahibi sizinle iletişime geçecektir.</div>` : '';
+                 html += `
+                 <div class="col-12">
+                    <div class="card-custom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="fw-bold mb-1">${app.listing.title}</h5>
+                                <p class="text-muted small mb-0">Tarih: ${app.applicationDate}</p>
+                            </div>
+                            <span class="badge ${getStatusBadge(app.status)} fs-6">${app.status}</span>
+                        </div>
+                        ${contactHTML}
+                    </div>
+                 </div>`;
+             });
+             document.getElementById('applications-list').innerHTML = html || '<p class="text-center">Başvuru yok.</p>';
+        }
+
+        function getStatusBadge(status) {
+            return status === 'Onaylandı' ? 'bg-success' : (status === 'Reddedildi' ? 'bg-danger' : 'bg-warning text-dark');
+        }
+
+        async function updateStatus(id, status) {
+            await fetch(`http://localhost:8080/api/applications/${id}/status`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'text/plain'},
+                body: status
+            });
+            loadIncomingApplications();
+        }
+
+        async function deleteListing(id) {
+            if(!confirm("Silmek istediğinize emin misiniz?")) return;
+            await fetch(`http://localhost:8080/api/listings/${id}`, { method: 'DELETE' });
+            loadMyLandlordListings();
+        }
+
+        async function applyToListing(id) {
+            const res = await fetch('http://localhost:8080/api/apply', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ studentId: currentUser.id, listingId: id })
+            });
+
+            if(res.ok) {
+                alert("Başvuru alındı!");
+                loadMyApplications();
+            } else {
+                alert(await res.text());
+            }
+        }
+		
+		async function loadFavoriteIds() {
+		    if(!currentUser) return;
+		    try {
+		        const res = await fetch(`http://localhost:8080/api/favorites/${currentUser.id}/ids`);
+		        if(res.ok) myFavoriteIds = await res.json();
+		    } catch(e) {
+		        console.log("Favoriler yüklenemedi (Backend hazır olmayabilir):", e);
+		    }
+		}
+		
+		async function toggleFavorite(listingId, btnElement) {
+		    if (!currentUser) return;
+		    
+		    const isCurrentlyLiked = myFavoriteIds.includes(listingId);
+		    
+		    if (isCurrentlyLiked) {
+		        myFavoriteIds = myFavoriteIds.filter(id => id !== listingId);
+		    } else {
+		        myFavoriteIds.push(listingId);
+		    }
+
+		    const allButtons = document.querySelectorAll(`.fav-btn-${listingId}`);
+		    allButtons.forEach(btn => {
+		        const icon = btn.querySelector('i');
+		        if (isCurrentlyLiked) {
+		            icon.className = 'fa-regular fa-heart text-danger fa-lg'; 
+		        } else {
+		            icon.className = 'fa-solid fa-heart text-danger fa-lg';
+		        }
+		    });
+
+		    try {
+		        await fetch(`http://localhost:8080/api/favorites/${currentUser.id}/${listingId}`, { method: 'POST' });
+		    } catch(e) { console.error("Favori hatası", e); }
+		    
+		    if(document.getElementById('tab-favorites').style.display === 'block') {
+		        loadFavoritesPage();
+		    }
+		}
+
+		async function loadFavoritesPage() {
+		    const res = await fetch(`http://localhost:8080/api/favorites/${currentUser.id}`);
+		    const data = await res.json();
+		    let html = '';
+		    
+		    if (data.length === 0) {
+		        html = '<div class="col-12 text-center text-muted mt-5"><i class="fa-solid fa-heart-crack fa-3x mb-3"></i><p>Henüz favori ilanınız yok.</p></div>';
+		    } else {
+		        data.forEach(item => html += createListingCardHTML(item, 'student'));
+		    }
+		    document.getElementById('favorites-list').innerHTML = html;
+		}
+		
+		function logout() {
+		    window.location.reload();
+		}
+		
+		// DETAY MODAL
+		function openDetailModal(item, type) {
+		    document.getElementById('modalTitle').innerText = item.title;
+		    document.getElementById('modalPrice').innerText = item.rentAmount + " TL";
+		    document.getElementById('modalCity').innerText = item.city;
+		    document.getElementById('modalRoomType').innerText = item.roomType;
+		    document.getElementById('modalLandlordInfo').innerHTML = `<i class="fa-solid fa-user-tie"></i> İlan Sahibi: <strong>${item.landlordName || 'Bilinmiyor'}</strong>`;
+
+		    let amHTML = '';
+		    if (item.amenities) {
+		        item.amenities.split(',').forEach(tag => {
+		            let icon = '<i class="fa-solid fa-check text-success"></i>';
+		            if(tag.includes('WiFi') || tag.includes('Fiber')) icon = '<i class="fa-solid fa-wifi text-primary"></i>';
+		            else if(tag.includes('Klima')) icon = '<i class="fa-regular fa-snowflake text-info"></i>';
+		            else if(tag.includes('Güvenlik')) icon = '<i class="fa-solid fa-shield-halved text-warning"></i>';
+		            else if(tag.includes('Metro')) icon = '<i class="fa-solid fa-train-subway text-danger"></i>';
+		            else if(tag.includes('Eşya')) icon = '<i class="fa-solid fa-couch text-secondary"></i>';
+		            else if(tag.includes('TV')) icon = '<i class="fa-solid fa-tv"></i>';
+		            else if(tag.includes('Otopark')) icon = '<i class="fa-solid fa-car"></i>';
+		            else if(tag.includes('Asansör')) icon = '<i class="fa-solid fa-elevator"></i>';
+		            else if(tag.includes('Balkon')) icon = '<i class="fa-solid fa-wind text-primary"></i>';
+		            else if(tag.includes('Fatura')) icon = '<i class="fa-solid fa-file-invoice-dollar text-success"></i>';
+		            else if(tag.includes('Evcil')) icon = '<i class="fa-solid fa-paw text-warning"></i>';
+
+		            amHTML += `<span class="badge bg-light text-dark border p-2 me-2 mb-2" style="font-size: 0.9rem;">${icon} ${tag.trim()}</span>`;
+		        });
+		    }
+		    document.getElementById('modalAmenities').innerHTML = amHTML || '<span class="text-muted">Özellik belirtilmemiş.</span>';
+
+		    const carouselInner = document.getElementById('modalCarouselInner');
+		    carouselInner.innerHTML = ''; 
+		    
+		    if (item.images && item.images.length > 0) {
+		        item.images.forEach((img, index) => {
+		            const activeClass = index === 0 ? 'active' : '';
+		            carouselInner.innerHTML += `
+		                <div class="carousel-item ${activeClass} h-100">
+		                    <img src="${img}" class="d-block w-100 h-100" style="object-fit: contain;" alt="Resim">
+		                </div>`;
+		        });
+		    } else {
+		        carouselInner.innerHTML = `<div class="d-flex align-items-center justify-content-center h-100 text-muted"><i class="fa-solid fa-image fa-3x"></i><p class="ms-3">Görsel Yok</p></div>`;
+		    }
+
+		    const actionArea = document.getElementById('modalActionArea');
+		    
+		    if (type === 'student') {
+		        let isFav = myFavoriteIds.includes(item.listingId);
+		        let heartIconClass = isFav ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart text-danger';
+		        
+		        actionArea.innerHTML = `
+		        <div class="d-flex gap-2">
+		            <button onclick="applyToListing(${item.listingId})" class="btn btn-success flex-grow-1 py-3 fw-bold fs-5">Hemen Başvur 🚀</button>
+		            <button onclick="toggleFavorite(${item.listingId}, this)" class="btn btn-outline-secondary d-flex align-items-center justify-content-center fav-btn-${item.listingId}" style="width: 60px;">
+		                <i class="${heartIconClass} fa-2x"></i>
+		            </button>
+		        </div>`;
+		    } else {
+		        actionArea.innerHTML = `
+		            <div class="d-flex gap-2">
+		                <button onclick='startEdit("${encodeURIComponent(JSON.stringify(item))}"); var myModal = bootstrap.Modal.getInstance(document.getElementById("listingDetailModal")); myModal.hide();' class="btn btn-warning flex-grow-1 fw-bold">Düzenle</button>
+		                <button onclick="deleteListing(${item.listingId})" class="btn btn-danger flex-grow-1 fw-bold">Sil</button>
+		            </div>`;
+		    }
+
+		    new bootstrap.Modal(document.getElementById('listingDetailModal')).show();
+		}
+		
+		// PROFİL PENCERESİNİ AÇMA
+		function openProfileModal() {
+		    document.getElementById('profileForm').reset();
+
+		    document.getElementById('profileContact').value = currentUser.contactInfo || '';
+
+		    if (currentUser.role === 'STUDENT') {
+		        document.getElementById('studentFields').style.display = 'block';
+		        document.getElementById('landlordFields').style.display = 'none';
+		        
+		        document.getElementById('profileSchool').value = currentUser.schoolName || '';
+		        document.getElementById('profileDept').value = currentUser.department || '';
+		        document.getElementById('profileNo').value = currentUser.studentNumber || '';
+
+		    } else {
+		        document.getElementById('studentFields').style.display = 'none';
+		        document.getElementById('landlordFields').style.display = 'block';
+
+		        document.getElementById('profileTax').value = currentUser.taxNumber || '';
+		    }
+
+		    new bootstrap.Modal(document.getElementById('profileModal')).show();
+		}
+
+		// PROFİLİ KAYDETME
+		async function saveProfile() {
+		    const contact = document.getElementById('profileContact').value;
+		    if(!contact) {
+		        alert("Telefon numarası zorunludur!");
+		        return;
+		    }
+
+		    let payload = { contactInfo: contact };
+		    let endpoint = "";
+
+		    if (currentUser.role === 'STUDENT') {
+		        payload.schoolName = document.getElementById('profileSchool').value;
+		        payload.department = document.getElementById('profileDept').value;
+		        payload.studentNumber = document.getElementById('profileNo').value;
+		        endpoint = `http://localhost:8080/api/students/${currentUser.id}`;
+		    } else {
+		        payload.taxNumber = document.getElementById('profileTax').value;
+		        endpoint = `http://localhost:8080/api/landlords/${currentUser.id}`;
+		    }
+
+		    try {
+		        const res = await fetch(endpoint, {
+		            method: 'PUT',
+		            headers: {'Content-Type': 'application/json'},
+		            body: JSON.stringify(payload)
+		        });
+
+		        if (res.ok) {
+		            const updatedUser = await res.json();
+		            updatedUser.role = currentUser.role; 
+		            currentUser = updatedUser;
+		            
+		            alert("Profil başarıyla güncellendi!");
+		            bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+                    loadProfile(); 
+		        } else {
+		            alert("Güncelleme başarısız.");
+		        }
+		    } catch (e) {
+		        console.error(e);
+		        alert("Hata oluştu.");
+		    }
+		}
+    </script>
+</body>
+</html>
